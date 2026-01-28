@@ -21,41 +21,22 @@ const authenticatedUser = (username, password) => {
   );
 };
 
+//only registered users can login
 regd_users.post("/login", (req, res) => {
-  const { username, password } = req.body;
-
-  if (!username || !password) {
-    return res.status(400).json({
-      message: "Username and password are required"
-    });
-  }
-
-  // Authenticate user
-  const validUser = users.find(
-    user => user.username === username && user.password === password
-  );
-
-  if (!validUser) {
-    return res.status(401).json({
-      message: "Invalid login credentials"
-    });
-  }
-
-  // Create JWT
-  let accessToken = jwt.sign(
-    { username },
-    "access",
-    { expiresIn: "1h" }
-  );
-
-  req.session.authorization = {
-    accessToken,
-    username
-  };
-
-  return res.status(200).json({
-    message: "Login successful!"
-  });
+    const { username, password } = req.body;
+    if (username && password) {
+        if (isValid(username)) {
+            if (authenticatedUser(username, password)) {
+                const token = jwt.sign({ username }, 'access', { expiresIn: '1hr' });
+                return res.status(200).json({ token })
+            }
+            return res.status(400).json({ message: `Please check the user name and password those are invalid`, status: 400 })
+        }
+        return res.status(404).json({ message: `No User found with the username - ${username}`, status: 404 })
+    }
+    else {
+        return res.status(400).json({ message: `Username and Password is Reuired for login`, status: 400 })
+    }
 });
 
 
