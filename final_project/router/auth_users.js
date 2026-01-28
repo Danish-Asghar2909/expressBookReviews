@@ -21,15 +21,28 @@ const authenticatedUser = (username, password) => {
   );
 };
 
-// 🔐 LOGIN
 regd_users.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  if (!authenticatedUser(username, password)) {
-    return res.status(401).json({ message: "Invalid login credentials" });
+  if (!username || !password) {
+    return res.status(400).json({
+      message: "Username and password are required"
+    });
   }
 
-  const accessToken = jwt.sign(
+  // Authenticate user
+  const validUser = users.find(
+    user => user.username === username && user.password === password
+  );
+
+  if (!validUser) {
+    return res.status(401).json({
+      message: "Invalid login credentials"
+    });
+  }
+
+  // Create JWT
+  let accessToken = jwt.sign(
     { username },
     "access",
     { expiresIn: "1h" }
@@ -40,8 +53,11 @@ regd_users.post("/login", (req, res) => {
     username
   };
 
-  return res.status(200).json({ message: "User successfully logged in" });
+  return res.status(200).json({
+    message: "Login successful!"
+  });
 });
+
 
 // ✍️ ADD / MODIFY REVIEW
 regd_users.put("/auth/review/:isbn", (req, res) => {
